@@ -69,7 +69,7 @@ export function Header({ activeCategory, onCategoryChange }: HeaderProps) {
         <div className="mx-auto max-w-7xl px-4 py-2.5 sm:px-6 lg:px-8">
           <div className="flex items-center justify-center gap-3">
             <Bike className="size-5 shrink-0 text-brand-red" />
-            <p className="text-center text-sm font-semibold sm:text-base text-balance">
+            <p className="min-w-0 text-center text-sm font-semibold sm:text-base">
               {contactInfo.deliveryNote}
             </p>
             <Bike className="size-5 shrink-0 text-brand-red hidden sm:block" />
