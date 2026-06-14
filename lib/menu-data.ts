@@ -49,7 +49,7 @@ export const menuData: MenuCategory[] = [
         id: "pizza-4-estaciones",
         name: "Pizza 4 Estaciones",
         description: "3 estaciones de 1 ingrediente + 1 estación Deluxe o Hawaiana",
-        price: 65,
+        price: 70,
         image: "/images/pizza4Estaciones2.jpeg"
       },
       {
