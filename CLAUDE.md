@@ -45,4 +45,26 @@ The entire site is a single page (`app/page.tsx`) that renders different menu ca
 
 ### Images
 
-Product images are stored in `public/images/`. The naming convention is `{category}-{number}.jpg` (e.g., `pizza-1.jpg`, `calzone-3.jpg`). Next.js Image optimization is disabled (`unoptimized: true`).
+Product images are stored in `public/images/`. Names are descriptive camelCase matching the product (e.g. `calzoneJamon.jpg`, `pizzaPersonalHawaiana.jpg`, `lasanaFamiliar.png`) — extensions vary (`.jpg`, `.jpeg`, `.png`), so copy the exact filename into `lib/menu-data.ts`. Next.js Image optimization is disabled (`unoptimized: true`).
+
+## Deployment
+
+Production is **GitHub Pages**, deployed automatically by `.github/workflows/deploy.yml` on every push to `main` (`npm ci` → `npm run build` → publish `./out`). There is no manual deploy step: pushing to `main` *is* the release.
+
+```bash
+git push origin main                   # triggers the deploy
+gh run list --limit 3                  # find the run id
+gh run watch <run-id> --exit-status    # wait for it to finish
+```
+
+A run takes roughly 45 seconds. Confirm it concluded `success` before telling the client the change is live.
+
+### Conventions
+
+Price and menu changes are committed straight to `main` — no feature branch. Commit subjects are in Spanish, following `git log`: `<Producto>: actualiza precio de Q<viejo> a Q<nuevo>`.
+
+### Known issues / pending maintenance
+
+- **Deprecated GitHub Actions.** `actions/checkout@v4`, `actions/setup-node@v4` and `actions/upload-artifact@v4` target Node 20, which the runners now force onto Node 24. Not breaking yet — bump to `v5` before support is dropped.
+- **Duplicate globals.** `styles/globals.css` is a legacy copy of `app/globals.css`; only the `app/` one is used. Candidate for deletion.
+- **Suppressed type errors.** `ignoreBuildErrors: true` in `next.config.mjs` means the deploy build will not catch TypeScript mistakes — run `npm run lint` locally before pushing.
