@@ -101,7 +101,7 @@ export const menuData: MenuCategory[] = [
         id: "calzone-1-ingrediente",
         name: "Don Calzone de 1 Ingrediente + Bebida",
         description: "Jamón, Peperoni, Salami, Carne o Salchicha Italiana",
-        price: 20,
+        price: 25,
         image: "/images/calzoneJamon.jpg"
       },
       {
@@ -145,7 +145,7 @@ export const menuData: MenuCategory[] = [
         id: "personal-1-ingrediente",
         name: "Pizza Personal de 1 Ingrediente + Bebida",
         description: "Jamón, Peperoni, Salami, Carne o Salchicha Italiana",
-        price: 20,
+        price: 25,
         image: "/images/pizzaPersonal.jpg"
       },
       {
