@@ -6,11 +6,11 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ```bash
 npm run dev      # Start development server
-npm run build    # Build for production
-npm run lint     # Run ESLint
+npm run build    # Build for production (static export to ./out)
+npm run lint     # BROKEN — eslint is not installed; see Known issues
 ```
 
-No test suite is configured. TypeScript build errors are suppressed via `ignoreBuildErrors: true` in `next.config.mjs`.
+No test suite is configured. TypeScript build errors are suppressed via `ignoreBuildErrors: true` in `next.config.mjs`, so `npm run build` is the only local check — and it will not fail on type errors. Verify changes by eye with `npm run dev`.
 
 ## Architecture
 
@@ -39,7 +39,7 @@ The entire site is a single page (`app/page.tsx`) that renders different menu ca
 ### Styling
 
 - Tailwind CSS v4 (configured via `@tailwindcss/postcss`).
-- Brand colors are CSS custom properties in `app/globals.css`: `--brand-red`, `--brand-blue`, `--brand-yellow`. There is also a `styles/globals.css` (legacy/duplicate).
+- Brand colors are CSS custom properties in `app/globals.css`: `--brand-red`, `--brand-blue`, `--brand-yellow`. `app/globals.css` is the only stylesheet — a stale `styles/globals.css` duplicate was deleted.
 - Shadcn/ui components live in `components/ui/` — these are generated files; prefer editing via the `shadcn` CLI rather than modifying directly.
 - Path alias `@/` maps to the repo root.
 
@@ -65,6 +65,6 @@ Price and menu changes are committed straight to `main` — no feature branch. C
 
 ### Known issues / pending maintenance
 
-- **Deprecated GitHub Actions.** `actions/checkout@v4`, `actions/setup-node@v4` and `actions/upload-artifact@v4` target Node 20, which the runners now force onto Node 24. Not breaking yet — bump to `v5` before support is dropped.
-- **Duplicate globals.** `styles/globals.css` is a legacy copy of `app/globals.css`; only the `app/` one is used. Candidate for deletion.
-- **Suppressed type errors.** `ignoreBuildErrors: true` in `next.config.mjs` means the deploy build will not catch TypeScript mistakes — run `npm run lint` locally before pushing.
+- **`npm run lint` does not work.** The script calls `eslint .`, but eslint is not in `package.json` at all, so it fails with `eslint: command not found`. Either install it (`npm i -D eslint eslint-config-next`) or drop the script.
+- **Suppressed type errors.** `ignoreBuildErrors: true` in `next.config.mjs` means neither the local nor the deploy build fails on TypeScript mistakes. With lint broken too, nothing is checking types right now.
+- **Build pinned to Node 20.** `deploy.yml` sets `node-version: '20'`, which is past end-of-life. The actions themselves run on Node 24; only the build step is pinned. Bump to `'22'` and confirm the deploy still succeeds.
