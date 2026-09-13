@@ -65,6 +65,7 @@ Price and menu changes are committed straight to `main` — no feature branch. C
 
 ### Known issues / pending maintenance
 
+- **"El scroll no se reinicia."** Reported by the client 2026-09-12; full context not yet given, and not yet reproduced. Likely relates to switching categories in `app/page.tsx` — `activeCategory` changes the rendered section but nothing resets the window scroll position, so the new category opens mid-page. Confirm the exact symptom before fixing.
 - **`npm run lint` does not work.** The script calls `eslint .`, but eslint is not in `package.json` at all, so it fails with `eslint: command not found`. Either install it (`npm i -D eslint eslint-config-next`) or drop the script.
 - **Suppressed type errors.** `ignoreBuildErrors: true` in `next.config.mjs` means neither the local nor the deploy build fails on TypeScript mistakes. With lint broken too, nothing is checking types right now.
 - **Build pinned to Node 20.** `deploy.yml` sets `node-version: '20'`, which is past end-of-life. The actions themselves run on Node 24; only the build step is pinned. Bump to `'22'` and confirm the deploy still succeeds.
