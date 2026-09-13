@@ -10,11 +10,18 @@ import { menuData } from '@/lib/menu-data'
 export default function Home() {
   const [activeCategory, setActiveCategory] = useState('pizzas')
 
+  // Al cambiar de categoría la sección se reemplaza pero el scroll se queda
+  // donde estaba, dejando la categoría nueva empezada a media página.
+  const handleCategoryChange = (categoryId: string) => {
+    setActiveCategory(categoryId)
+    window.scrollTo(0, 0)
+  }
+
   return (
     <div className="flex min-h-screen flex-col bg-gray-50">
-      <Header 
-        activeCategory={activeCategory} 
-        onCategoryChange={setActiveCategory} 
+      <Header
+        activeCategory={activeCategory}
+        onCategoryChange={handleCategoryChange}
       />
       
       <main className="flex-1">
