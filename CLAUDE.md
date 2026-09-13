@@ -7,10 +7,13 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ```bash
 npm run dev      # Start development server
 npm run build    # Build for production (static export to ./out)
-npm run lint     # BROKEN — eslint is not installed; see Known issues
+npm run lint     # ESLint 9 (flat config in eslint.config.mjs)
+npx tsc --noEmit # Typecheck — the build will NOT do this for you
 ```
 
-No test suite is configured. TypeScript build errors are suppressed via `ignoreBuildErrors: true` in `next.config.mjs`, so `npm run build` is the only local check — and it will not fail on type errors. Verify changes by eye with `npm run dev`.
+No test suite is configured. `ignoreBuildErrors: true` in `next.config.mjs` means `npm run build` never fails on TypeScript errors, so run `npx tsc --noEmit` separately to check types. Both lint and typecheck pass clean as of 2026-09-12.
+
+ESLint config lives in `eslint.config.mjs` (`eslint-config-next` core-web-vitals + typescript). `components/ui/**` and `hooks/**` are shadcn-generated scaffolding and have a few React-hooks rules turned off there — that exception is for generated code only, so if you ever hand-edit one of those files, take it out of the exception.
 
 ## Architecture
 
@@ -65,6 +68,6 @@ Price and menu changes are committed straight to `main` — no feature branch. C
 
 ### Known issues / pending maintenance
 
-- **`npm run lint` does not work.** The script calls `eslint .`, but eslint is not in `package.json` at all, so it fails with `eslint: command not found`. Either install it (`npm i -D eslint eslint-config-next`) or drop the script.
-- **Suppressed type errors.** `ignoreBuildErrors: true` in `next.config.mjs` means neither the local nor the deploy build fails on TypeScript mistakes. With lint broken too, nothing is checking types right now.
+- **Nothing runs lint or typecheck automatically.** `deploy.yml` only builds; a lint or type error reaches production unnoticed. Adding those steps to CI would catch it, at the cost of a lint error blocking an urgent price change — decide which tradeoff suits the client.
+- **Unused shadcn scaffolding.** The site imports exactly one component from `components/ui/` (`button`). The rest — `carousel`, `sidebar`, `use-mobile`, `use-toast`, and the duplicate `hooks/` copies — are unreferenced generated files. Not bundled (nothing imports them), but they are the only source of lint noise. Safe to delete when someone wants the cleanup.
 - **Node version is not pinned locally.** `deploy.yml` builds on Node 22; `package.json` has no `engines` field, so a local machine on a different major (this one runs 24) can build differently than CI without warning.
