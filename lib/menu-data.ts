@@ -55,14 +55,14 @@ export const menuData: MenuCategory[] = [
       {
         id: "cheese-bread",
         name: "Cheese Bread + Bebida",
-        price: 20,
+        price: 25,
         image: "/images/cheeseBread.jpeg"
       },
       {
         id: "pizza-2-estaciones",
         name: "Pizza 2 Estaciones (12 porciones)",
         description: "Jamón, Peperoni, Salami, Carne o Salchicha Italiana",
-        price: 55,
+        price: 60,
         image: "/images/pizza2Estaciones.jpg"
       },
       {
@@ -107,7 +107,7 @@ export const menuData: MenuCategory[] = [
       {
         id: "calzone-hawaiano",
         name: "Don Calzone Hawaiano + Bebida",
-        price: 25,
+        price: 30,
         image: "/images/calzoneHawaDelu.jpg"
       },
       {
