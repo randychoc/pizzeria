@@ -67,4 +67,4 @@ Price and menu changes are committed straight to `main` — no feature branch. C
 
 - **`npm run lint` does not work.** The script calls `eslint .`, but eslint is not in `package.json` at all, so it fails with `eslint: command not found`. Either install it (`npm i -D eslint eslint-config-next`) or drop the script.
 - **Suppressed type errors.** `ignoreBuildErrors: true` in `next.config.mjs` means neither the local nor the deploy build fails on TypeScript mistakes. With lint broken too, nothing is checking types right now.
-- **Build pinned to Node 20.** `deploy.yml` sets `node-version: '20'`, which is past end-of-life. The actions themselves run on Node 24; only the build step is pinned. Bump to `'22'` and confirm the deploy still succeeds.
+- **Node version is not pinned locally.** `deploy.yml` builds on Node 22; `package.json` has no `engines` field, so a local machine on a different major (this one runs 24) can build differently than CI without warning.
