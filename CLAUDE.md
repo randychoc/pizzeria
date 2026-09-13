@@ -43,7 +43,7 @@ The entire site is a single page (`app/page.tsx`) that renders different menu ca
 
 - Tailwind CSS v4 (configured via `@tailwindcss/postcss`).
 - Brand colors are CSS custom properties in `app/globals.css`: `--brand-red`, `--brand-blue`, `--brand-yellow`. `app/globals.css` is the only stylesheet — a stale `styles/globals.css` duplicate was deleted.
-- Shadcn/ui components live in `components/ui/` — these are generated files; prefer editing via the `shadcn` CLI rather than modifying directly.
+- Shadcn/ui: `components/ui/` holds **only `button.tsx`** — the one component the site actually uses. The rest of the generated catalogue was deleted (it never shipped in the JS, but Tailwind scanned it and inflated the CSS by ~83 KB). Add any component back on demand with `npx shadcn@latest add <name>`; `components.json` is still configured for it. Generated files are edited via the CLI, not by hand.
 - Path alias `@/` maps to the repo root.
 
 ### Images
@@ -69,5 +69,6 @@ Price and menu changes are committed straight to `main` — no feature branch. C
 ### Known issues / pending maintenance
 
 - **Nothing runs lint or typecheck automatically.** `deploy.yml` only builds; a lint or type error reaches production unnoticed. Adding those steps to CI would catch it, at the cost of a lint error blocking an urgent price change — decide which tradeoff suits the client.
-- **Unused shadcn scaffolding.** The site imports exactly one component from `components/ui/` (`button`). The rest — `carousel`, `sidebar`, `use-mobile`, `use-toast`, and the duplicate `hooks/` copies — are unreferenced generated files. Not bundled (nothing imports them), but they are the only source of lint noise. Safe to delete when someone wants the cleanup.
+- **39 orphaned npm dependencies.** Deleting the shadcn scaffolding left most of `dependencies` unused: every `@radix-ui/*` except `react-slot`, plus `recharts`, `embla-carousel-react`, `vaul`, `cmdk`, `react-hook-form`, `zod`, `date-fns`, `react-day-picker`, `input-otp`, `sonner`, `react-resizable-panels`, `next-themes`, `@hookform/resolvers`. They never reach the bundle — the cost is `npm ci` time and audit noise. Watch out when pruning: `react-dom` looks unused by a naive scan but is a Next peer dependency.
+- **Dead code outside `components/ui/`.** `components/theme-provider.tsx` (nothing imports it; sole consumer of `next-themes`), `@vercel/analytics` (in `package.json`, never imported — so the site measures nothing today), and `autoprefixer` (in `dependencies`, but `postcss.config.mjs` loads only `@tailwindcss/postcss`; Tailwind v4 prefixes on its own). Also the `--sidebar-*` custom properties in `app/globals.css`, now without a consumer.
 - **Node version is not pinned locally.** `deploy.yml` builds on Node 22; `package.json` has no `engines` field, so a local machine on a different major (this one runs 24) can build differently than CI without warning.
