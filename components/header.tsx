@@ -26,7 +26,7 @@ export function Header({ activeCategory, onCategoryChange }: HeaderProps) {
             <div className="flex items-center gap-3">
               <div className="size-12 rounded-full overflow-hidden bg-white/10 backdrop-blur-sm flex items-center justify-center">
                 <Image
-                  src="/images/newLogoPizzeria.jpeg"
+                  src="/images/newLogoPizzeria.webp"
                   alt="Logo Pizzería Las Vegas"
                   width={48}
                   height={48}

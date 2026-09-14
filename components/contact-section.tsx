@@ -33,7 +33,7 @@ export function ContactSection({ isActive }: ContactSectionProps) {
           <div className="bg-brand-red px-6 py-10 text-center sm:px-12 sm:py-14">
             <div className="mx-auto mb-4 size-24 rounded-full overflow-hidden bg-white/10 backdrop-blur-sm sm:size-28">
               <Image
-                src="/images/newLogoPizzeria.jpeg"
+                src="/images/newLogoPizzeria.webp"
                 alt="Logo Pizzería Las Vegas"
                 width={112}
                 height={112}
