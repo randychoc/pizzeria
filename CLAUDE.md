@@ -30,6 +30,10 @@ The entire site is a single page (`app/page.tsx`) that renders different menu ca
 2. `app/page.tsx` holds `activeCategory` state and renders `<MenuSection>` with the matching data.
 3. `components/header.tsx` emits category change events to control which section is shown.
 
+`app/page.tsx` does **not** hand `setActiveCategory` to the header directly. It wraps it in `handleCategoryChange`, which also calls `window.scrollTo(0, 0)` — without that, switching category swaps the section while the scroll position stays put, so the new category opens mid-page (or pinned to the bottom, if it is shorter than the one before). Keep the scroll reset if you touch this; it fixes a bug the client reported.
+
+Two deliberate choices there: the reset lives in the handler rather than a `useEffect`, so it only fires on a real tab click and does not fight the browser's scroll restoration on reload; and the jump is instant rather than `behavior: 'smooth'`, because a shorter category shrinks the page mid-animation and the browser clamps the scroll partway through.
+
 ### Key files
 
 - `lib/menu-data.ts` — Single source of truth for all menu items, prices, descriptions, and contact info. **Edit this file to add/modify/remove products.**
