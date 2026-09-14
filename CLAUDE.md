@@ -47,22 +47,39 @@ Two deliberate choices there: the reset lives in the handler rather than a `useE
 
 ### Styling
 
-- Tailwind CSS v4 (configured via `@tailwindcss/postcss`). Tailwind scans **every** source file, so an unused component still inflates the generated CSS — deleting dead files is a real production win, not just tidiness.
+- Tailwind CSS v4 (configured via `@tailwindcss/postcss`). Tailwind scans **every** source file, so an unused component still inflates the generated CSS. Worth cleaning up, but keep the scale honest: see "What actually reaches the visitor" below — gzip absorbs most of a CSS saving before it reaches anyone.
 - Brand colors are CSS custom properties in `app/globals.css`: `--brand-red`, `--brand-blue`, `--brand-yellow`. `app/globals.css` is the only stylesheet — a stale `styles/globals.css` duplicate was deleted.
-- Shadcn/ui: `components/ui/` holds **only `button.tsx`** — the one component the site actually uses. The rest of the generated catalogue was deleted (it never shipped in the JS, but Tailwind scanned it and inflated the CSS by ~83 KB). Add any component back on demand with `npx shadcn@latest add <name>`; `components.json` is still configured for it. Generated files are edited via the CLI, not by hand.
+- Shadcn/ui: `components/ui/` holds **only `button.tsx`** — the one component the site actually uses. The rest of the generated catalogue was deleted: it never shipped in the JS, but Tailwind scanned it and generated utilities for a sidebar, a drawer, recharts and a command palette, cutting the CSS from 120 KB to 35 KB on disk (~17 KB gzipped). Add any component back on demand with `npx shadcn@latest add <name>`; `components.json` is still configured for it. Generated files are edited via the CLI, not by hand.
 - Path alias `@/` maps to the repo root.
 
 ### Images
 
-Product images are stored in `public/images/`. Names are descriptive camelCase matching the product (e.g. `calzoneJamon.jpg`, `pizzaPersonalHawaiana.jpg`) — extensions vary (`.jpg`, `.jpeg`), so copy the exact filename into `lib/menu-data.ts`.
+Product images live in `public/images/`, named in descriptive camelCase matching the product. **28 of the 30 are `.webp`**; `pizza2Estaciones.jpg` and `pizzaEspecialidad.jpg` stayed JPEG because WebP made them 4% and 7% *bigger*. Extensions therefore vary — copy the exact filename into `lib/menu-data.ts`.
 
-**Next's image optimization is off** (`unoptimized: true`, required by `output: 'export'`), so whatever byte you commit is the byte the phone downloads. Optimize before committing a new photo:
+**Next's image optimization is off** (`unoptimized: true`, forced by `output: 'export'`), so the committed file is what the phone downloads. To add a new photo:
 
-- **Cap the long side at 1400px.** Cards render at ~390px, but clicking one opens a lightbox at `90vh/90vw` (`components/menu-item-card.tsx`), so the file has to survive being viewed large.
-- **Re-encode as JPEG, quality 82, mozjpeg + progressive.** `sharp` is already available via Next, no extra install.
-- **Never commit a photo as PNG.** Two were, and they were the two heaviest files in the repo — 1.4 MB and 820 KB, both fully opaque, so the alpha channel was pure waste. As JPEG they dropped 95% and 91% with no visible difference.
-- **Check the result is actually smaller before replacing.** Half the images here were already compressed below quality 82; re-encoding those *grew* them by up to 19% while still losing fidelity. Those were left untouched on purpose — if a file does not shrink by a clear margin, leave the original.
-- The logo is the exception to the resize rule: it is a graphic with fine text, kept at 336px (3× its 112px display) and quality 90 because at 224px the lettering visibly softened.
+```bash
+# sharp ships with Next — no install needed
+node -e "require('sharp')('foto.jpg').resize({width:1400,fit:'inside'}).webp({quality:75,effort:6}).toFile('public/images/nombre.webp')"
+```
+
+- **Cap the long side at 1400px.** Cards render at ~390px, but clicking one opens a lightbox at `90vh/90vw` (`components/menu-item-card.tsx`), so the file has to hold up viewed large. Verified in production: at 1400px WebP q75 the lightbox stays sharp, fine print included.
+- **WebP q75, effort 6.** Roughly equivalent to JPEG q82. Note q82 WebP only beat optimized JPEG by 15% here — the win comes from q75, not from the format alone.
+- **Never commit a photo as PNG.** The two that were PNG were the heaviest files in the repo (1.4 MB and 820 KB) and both were fully opaque, so the alpha channel was pure waste. They dropped 95% and 91%.
+- **Confirm the result is actually smaller, per file.** Many of these images were already well compressed; re-encoding those *grew* them by up to 19% while still losing fidelity. If a file does not shrink by a clear margin, keep the original — that is why two are still JPEG.
+- **Look at the output before committing it.** Byte counts do not tell you whether a photo still looks appetizing. The logo is the case in point: at 224px it saved 86% but the lettering visibly softened, so it sits at 336px (3× its 112px display) and quality 90.
+
+### What actually reaches the visitor
+
+GitHub Pages gzips text assets, so **on-disk size is not download size** — a distinction worth keeping straight before celebrating a byte count:
+
+| | On disk | Over the wire |
+|---|---|---|
+| JS | 707 KB | **169 KB** |
+| CSS | 35 KB | **7 KB** |
+| Images | 1519 KB | **1519 KB** |
+
+Images are already compressed and gzip does nothing for them, which makes them ~88% of what a visitor actually downloads. Work on image weight pays off roughly 1:1; work on CSS and JS weight is discounted by whatever gzip was already doing. Measure with `performance.getEntriesByType('resource')` in the browser (`encodedBodySize` vs `decodedBodySize`), not with `ls`.
 
 ## Deployment
 
