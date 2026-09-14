@@ -197,7 +197,7 @@ export const menuData: MenuCategory[] = [
         name: "Lasaña Familiar",
         description: "Incluye pan",
         price: 125,
-        image: "/images/lasanaFamiliar.png"
+        image: "/images/lasanaFamiliar.jpg"
       },
       {
         id: "alitas-5",
@@ -223,7 +223,7 @@ export const menuData: MenuCategory[] = [
         id: "hamburguesa-res",
         name: "Combo - Hamburguesa de Res 1/4 de Libra",
         price: 40,
-        image: "/images/burger.png"
+        image: "/images/burger.jpg"
       },
       {
         id: "hamburguesa-pollo",

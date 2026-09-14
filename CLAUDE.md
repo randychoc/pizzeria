@@ -54,7 +54,15 @@ Two deliberate choices there: the reset lives in the handler rather than a `useE
 
 ### Images
 
-Product images are stored in `public/images/`. Names are descriptive camelCase matching the product (e.g. `calzoneJamon.jpg`, `pizzaPersonalHawaiana.jpg`, `lasanaFamiliar.png`) — extensions vary (`.jpg`, `.jpeg`, `.png`), so copy the exact filename into `lib/menu-data.ts`. Next.js Image optimization is disabled (`unoptimized: true`).
+Product images are stored in `public/images/`. Names are descriptive camelCase matching the product (e.g. `calzoneJamon.jpg`, `pizzaPersonalHawaiana.jpg`) — extensions vary (`.jpg`, `.jpeg`), so copy the exact filename into `lib/menu-data.ts`.
+
+**Next's image optimization is off** (`unoptimized: true`, required by `output: 'export'`), so whatever byte you commit is the byte the phone downloads. Optimize before committing a new photo:
+
+- **Cap the long side at 1400px.** Cards render at ~390px, but clicking one opens a lightbox at `90vh/90vw` (`components/menu-item-card.tsx`), so the file has to survive being viewed large.
+- **Re-encode as JPEG, quality 82, mozjpeg + progressive.** `sharp` is already available via Next, no extra install.
+- **Never commit a photo as PNG.** Two were, and they were the two heaviest files in the repo — 1.4 MB and 820 KB, both fully opaque, so the alpha channel was pure waste. As JPEG they dropped 95% and 91% with no visible difference.
+- **Check the result is actually smaller before replacing.** Half the images here were already compressed below quality 82; re-encoding those *grew* them by up to 19% while still losing fidelity. Those were left untouched on purpose — if a file does not shrink by a clear margin, leave the original.
+- The logo is the exception to the resize rule: it is a graphic with fine text, kept at 336px (3× its 112px display) and quality 90 because at 224px the lettering visibly softened.
 
 ## Deployment
 
