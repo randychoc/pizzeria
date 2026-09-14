@@ -11,7 +11,7 @@ npm run lint      # ESLint 9 (flat config in eslint.config.mjs)
 npm run typecheck # tsc --noEmit — the build will NOT do this for you
 ```
 
-No test suite is configured. `ignoreBuildErrors: true` in `next.config.mjs` means `npm run build` never fails on TypeScript errors, which is why `typecheck` is a separate script. **CI runs `lint` and `typecheck` before `build`, and a failure in either blocks the deploy** — so run both locally before pushing. Both pass clean as of 2026-09-13.
+No test suite is configured. `ignoreBuildErrors: true` in `next.config.mjs` means `npm run build` never fails on TypeScript errors, which is why `typecheck` is a separate script. **CI runs `lint` and `typecheck` before `build`, and a failure in either blocks the deploy** — so run both locally before pushing. Both pass clean as of 2026-09-14.
 
 If a lint error ever blocks an urgent price change, fix the error rather than bypassing CI; there is no deploy path that skips these steps short of editing the workflow.
 
@@ -39,7 +39,7 @@ Two deliberate choices there: the reset lives in the handler rather than a `useE
 - `lib/menu-data.ts` — Single source of truth for all menu items, prices, descriptions, and contact info. **Edit this file to add/modify/remove products.**
 - `app/page.tsx` — Home page with category state and layout orchestration.
 - `app/layout.tsx` — Root layout: metadata, Google Fonts (Poppins), theme color, and **Google Analytics** (GA4 `G-GBG1JM7H2F`, injected as raw `next/script` tags and gated to `NODE_ENV === 'production'`). Analytics is wired by hand here, not through an npm package — a dependency scan will not reveal it, so do not conclude the site has no analytics from `package.json` alone.
-- `components/menu-item-card.tsx` — Renders individual product cards with image, name, description, price.
+- `components/menu-item-card.tsx` — Renders individual product cards with image, name, description, price. Also owns the lightbox that opens on clicking a photo (`90vh/90vw`), which is what sets the 1400px floor on image dimensions, and the lazy-loading setup described under "Verifying production in a browser".
 - `components/menu-section.tsx` — Renders a full category section (grid of `MenuItemCard`).
 - `components/header.tsx` — Sticky navigation with category tabs.
 - `components/contact-section.tsx` — Contact/location info section.
@@ -92,6 +92,24 @@ gh run watch <run-id> --exit-status    # wait for it to finish
 ```
 
 A run takes roughly 45 seconds. Confirm it concluded `success` before telling the client the change is live.
+
+### Verifying production in a browser
+
+Images are lazy-loaded: `components/menu-item-card.tsx` sets `priority` on the first card of a category and `loading="lazy"` on the rest. That makes browser checks misleading in two ways, and both cost real debugging time on 2026-09-14:
+
+- **A backgrounded tab neither paints nor lazy-loads.** Check `document.visibilityState` first — if it is `"hidden"`, screenshots come back blank or grey and only the `priority` image reports as loaded. That is the tab, not the site.
+- **"1 of 10 images loaded" is the correct result**, not a failure, whenever the other nine are below the fold or the tab is hidden.
+
+To actually verify every image resolves, bypass lazy loading instead of trying to scroll it into view:
+
+```js
+const imgs=[...document.querySelectorAll('img')];
+imgs.forEach(i=>{i.loading='eager'; if(!i.complete) i.src=i.src;});
+await Promise.all(imgs.map(i=>i.complete?null:new Promise(r=>{i.onload=r;i.onerror=r;})));
+imgs.filter(i=>i.complete&&i.naturalWidth===0).length   // 0 = todas cargaron
+```
+
+Useful companions: `performance.getEntriesByType('resource')` filtered on `responseStatus>=400` for failed requests, and `typeof window.gtag` plus a `collect` request in that same list to confirm Analytics is not merely present but actually reporting.
 
 ### Conventions
 
