@@ -32,7 +32,7 @@ The entire site is a single page (`app/page.tsx`) that renders different menu ca
 
 - `lib/menu-data.ts` — Single source of truth for all menu items, prices, descriptions, and contact info. **Edit this file to add/modify/remove products.**
 - `app/page.tsx` — Home page with category state and layout orchestration.
-- `app/layout.tsx` — Root layout: metadata, Google Fonts (Poppins), theme color.
+- `app/layout.tsx` — Root layout: metadata, Google Fonts (Poppins), theme color, and **Google Analytics** (GA4 `G-GBG1JM7H2F`, injected as raw `next/script` tags and gated to `NODE_ENV === 'production'`). Analytics is wired by hand here, not through an npm package — a dependency scan will not reveal it, so do not conclude the site has no analytics from `package.json` alone.
 - `components/menu-item-card.tsx` — Renders individual product cards with image, name, description, price.
 - `components/menu-section.tsx` — Renders a full category section (grid of `MenuItemCard`).
 - `components/header.tsx` — Sticky navigation with category tabs.
@@ -41,7 +41,7 @@ The entire site is a single page (`app/page.tsx`) that renders different menu ca
 
 ### Styling
 
-- Tailwind CSS v4 (configured via `@tailwindcss/postcss`).
+- Tailwind CSS v4 (configured via `@tailwindcss/postcss`). Tailwind scans **every** source file, so an unused component still inflates the generated CSS — deleting dead files is a real production win, not just tidiness.
 - Brand colors are CSS custom properties in `app/globals.css`: `--brand-red`, `--brand-blue`, `--brand-yellow`. `app/globals.css` is the only stylesheet — a stale `styles/globals.css` duplicate was deleted.
 - Shadcn/ui: `components/ui/` holds **only `button.tsx`** — the one component the site actually uses. The rest of the generated catalogue was deleted (it never shipped in the JS, but Tailwind scanned it and inflated the CSS by ~83 KB). Add any component back on demand with `npx shadcn@latest add <name>`; `components.json` is still configured for it. Generated files are edited via the CLI, not by hand.
 - Path alias `@/` maps to the repo root.
@@ -69,6 +69,5 @@ Price and menu changes are committed straight to `main` — no feature branch. C
 ### Known issues / pending maintenance
 
 - **Nothing runs lint or typecheck automatically.** `deploy.yml` only builds; a lint or type error reaches production unnoticed. Adding those steps to CI would catch it, at the cost of a lint error blocking an urgent price change — decide which tradeoff suits the client.
-- **39 orphaned npm dependencies.** Deleting the shadcn scaffolding left most of `dependencies` unused: every `@radix-ui/*` except `react-slot`, plus `recharts`, `embla-carousel-react`, `vaul`, `cmdk`, `react-hook-form`, `zod`, `date-fns`, `react-day-picker`, `input-otp`, `sonner`, `react-resizable-panels`, `next-themes`, `@hookform/resolvers`. They never reach the bundle — the cost is `npm ci` time and audit noise. Watch out when pruning: `react-dom` looks unused by a naive scan but is a Next peer dependency.
-- **Dead code outside `components/ui/`.** `components/theme-provider.tsx` (nothing imports it; sole consumer of `next-themes`), `@vercel/analytics` (in `package.json`, never imported — so the site measures nothing today), and `autoprefixer` (in `dependencies`, but `postcss.config.mjs` loads only `@tailwindcss/postcss`; Tailwind v4 prefixes on its own). Also the `--sidebar-*` custom properties in `app/globals.css`, now without a consumer.
+- **6 npm audit advisories (1 critical, 4 high).** All of them sit in Next itself and its build chain — `next`, `postcss`, `nanoid`, `browserslist`, `sharp`, `baseline-browser-mapping` — not in application dependencies, so no amount of pruning clears them. The critical one is a Server Components DoS, which does not apply to what is deployed: `output: 'export'` ships static files to GitHub Pages with no server runtime. It matters for the local dev server. Clearing them means upgrading Next.
 - **Node version is not pinned locally.** `deploy.yml` builds on Node 22; `package.json` has no `engines` field, so a local machine on a different major (this one runs 24) can build differently than CI without warning.
