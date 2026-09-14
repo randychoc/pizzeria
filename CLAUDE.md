@@ -7,13 +7,15 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ```bash
 npm run dev      # Start development server
 npm run build    # Build for production (static export to ./out)
-npm run lint     # ESLint 9 (flat config in eslint.config.mjs)
-npx tsc --noEmit # Typecheck — the build will NOT do this for you
+npm run lint      # ESLint 9 (flat config in eslint.config.mjs)
+npm run typecheck # tsc --noEmit — the build will NOT do this for you
 ```
 
-No test suite is configured. `ignoreBuildErrors: true` in `next.config.mjs` means `npm run build` never fails on TypeScript errors, so run `npx tsc --noEmit` separately to check types. Both lint and typecheck pass clean as of 2026-09-12.
+No test suite is configured. `ignoreBuildErrors: true` in `next.config.mjs` means `npm run build` never fails on TypeScript errors, which is why `typecheck` is a separate script. **CI runs `lint` and `typecheck` before `build`, and a failure in either blocks the deploy** — so run both locally before pushing. Both pass clean as of 2026-09-13.
 
-ESLint config lives in `eslint.config.mjs` (`eslint-config-next` core-web-vitals + typescript). `components/ui/**` and `hooks/**` are shadcn-generated scaffolding and have a few React-hooks rules turned off there — that exception is for generated code only, so if you ever hand-edit one of those files, take it out of the exception.
+If a lint error ever blocks an urgent price change, fix the error rather than bypassing CI; there is no deploy path that skips these steps short of editing the workflow.
+
+ESLint config lives in `eslint.config.mjs` (`eslint-config-next` core-web-vitals + typescript). The rule exception it carries for `components/ui/**` and `hooks/**` has no effect today (that scaffolding was deleted), but is kept for components re-added later via the shadcn CLI.
 
 ## Architecture
 
@@ -52,7 +54,7 @@ Product images are stored in `public/images/`. Names are descriptive camelCase m
 
 ## Deployment
 
-Production is **GitHub Pages**, deployed automatically by `.github/workflows/deploy.yml` on every push to `main` (`npm ci` → `npm run build` → publish `./out`). There is no manual deploy step: pushing to `main` *is* the release.
+Production is **GitHub Pages**, deployed automatically by `.github/workflows/deploy.yml` on every push to `main` (`npm ci` → `lint` → `typecheck` → `build` → publish `./out`). There is no manual deploy step: pushing to `main` *is* the release. Lint and typecheck gate the build, so a failure in either means nothing is published and the site keeps serving the previous version.
 
 ```bash
 git push origin main                   # triggers the deploy
@@ -68,6 +70,5 @@ Price and menu changes are committed straight to `main` — no feature branch. C
 
 ### Known issues / pending maintenance
 
-- **Nothing runs lint or typecheck automatically.** `deploy.yml` only builds; a lint or type error reaches production unnoticed. Adding those steps to CI would catch it, at the cost of a lint error blocking an urgent price change — decide which tradeoff suits the client.
 - **Next is pinned by caret, not exact.** `next: ^16.3.5` means `npm ci` in CI installs whatever 16.x the lockfile holds — fine today, but the lockfile is the only thing keeping CI and local identical. `npm audit` reports 0 vulnerabilities as of 2026-09-13; re-check after any dependency change.
 - **Node version is not pinned locally.** `deploy.yml` builds on Node 22; `package.json` has no `engines` field, so a local machine on a different major (this one runs 24) can build differently than CI without warning.

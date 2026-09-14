@@ -24,6 +24,11 @@ jobs:
           node-version: '22'
           cache: 'npm'
       - run: npm ci
+      # Corren antes del build y lo bloquean si fallan. El build nunca
+      # atrapa errores de tipos por su cuenta: next.config.mjs tiene
+      # ignoreBuildErrors: true.
+      - run: npm run lint
+      - run: npm run typecheck
       - run: npm run build
       - uses: actions/upload-pages-artifact@v5
         with:
