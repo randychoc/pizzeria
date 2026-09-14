@@ -75,4 +75,4 @@ Price and menu changes are committed straight to `main` — no feature branch. C
 ### Known issues / pending maintenance
 
 - **Next is pinned by caret, not exact.** `next: ^16.3.5` means `npm ci` in CI installs whatever 16.x the lockfile holds — fine today, but the lockfile is the only thing keeping CI and local identical. `npm audit` reports 0 vulnerabilities as of 2026-09-13; re-check after any dependency change.
-- **Node version is not pinned locally.** `deploy.yml` builds on Node 22; `package.json` has no `engines` field, so a local machine on a different major (this one runs 24) can build differently than CI without warning.
+- **CI and local run different Node majors.** `deploy.yml` builds on Node 22, this machine on 24. `engines` declares `>=22`, which is the supported floor — it does not force the two to match, and npm only warns on a mismatch anyway (no `.npmrc` with `engine-strict=true`). Both build clean today. To make them actually identical, either bump `node-version` in `deploy.yml` to `'24'` or pin `engines` to a single major.
